@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cypher-windexer
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: cypher-windexer
+  template:
+    metadata:
+      labels:
+        app: cypher-windexer
+    spec:
+      containers:
+      - name: cypher-windexer
+        image: your-registry/cypher-windexer:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: RUN_MODE
+          value: "production"
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
