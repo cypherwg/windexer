@@ -1,52 +1,31 @@
-pub mod rpc;
+pub mod api;
 pub mod compression;
 pub mod indexer;
-pub mod storage;
-pub mod api;
-pub mod wasm;
 pub mod metrics;
+pub mod rpc;
+pub mod storage;
 pub mod utils;
+pub mod wasm;
 
-use serde::Deserialize;
-use config::{Config, ConfigError, Environment, File};
-use std::env;
+use anyhow::Result;
+use tokio;
 
-#[derive(Debug, Deserialize)]
-pub struct Settings {
-    pub database: DatabaseSettings,
-    pub application: ApplicationSettings,
-    pub solana: SolanaSettings,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct DatabaseSettings {
-    pub redis_url: String,
-    pub scylla_nodes: Vec<String>,
-    pub clickhouse_url: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct ApplicationSettings {
-    pub port: u16,
-    pub host: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct SolanaSettings {
-    pub rpc_url: String,
-    pub ws_url: String,
-}
-
-impl Settings {
-    pub fn new() -> Result<Self, ConfigError> {
-        let run_mode = env::var("RUN_MODE").unwrap_or_else(|_| "development".into());
-
-        let s = Config::builder()
-            .add_source(File::with_name("config/default"))
-            .add_source(File::with_name(&format!("config/environments/{}", run_mode)).required(false))
-            .add_source(Environment::with_prefix("app"))
-            .build()?;
-
-        s.try_deserialize()
+pub async fn run() -> Result<()> {
+    utils::logging::init_logger()?;
+    let config = utils::config::load_config()?;
+    
+    let storage = storage::database::Database::new(&config.database_url).await?;
+    let rpc_client = rpc::client::RpcClient::new(&config.solana_rpc_url);
+    let indexer = indexer::Indexer::new(storage.clone(), rpc_client.clone());
+    
+    let api_server = api::start_server(config.api_port, storage.clone())?;
+    let metrics_server = metrics::start_server(config.metrics_port)?;
+    
+    tokio::select! {
+        _ = indexer.run() => println!("Indexer finished"),
+        _ = api_server => println!("API server finished"),
+        _ = metrics_server => println!("Metrics server finished"),
     }
+    
+    Ok(())
 }

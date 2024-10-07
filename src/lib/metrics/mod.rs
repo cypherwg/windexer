@@ -1,9 +1,8 @@
-use metrics::{counter, gauge};
+mod prometheus;
 
-pub fn increment_indexed_blocks() {
-    counter!("indexed_blocks_total", 1);
-}
+use warp::Filter;
 
-pub fn set_current_slot(slot: u64) {
-    gauge!("current_slot", slot as f64);
+pub fn start_server(port: u16) -> anyhow::Result<impl std::future::Future<Output = ()>> {
+    let metrics = warp::path!("metrics").and_then(prometheus::metrics_handler);
+    Ok(warp::serve(metrics).run(([0, 0, 0, 0], port)))
 }

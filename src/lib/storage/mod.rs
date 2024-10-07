@@ -1,11 +1,25 @@
-use async_trait::async_trait;
+use anyhow::Result;
+use cid::Cid;
+use ipfs_api_backend_hyper::{IpfsApi, IpfsClient};
 
-#[async_trait]
-pub trait Storage {
-    async fn store_account(&self, pubkey: &str, data: &[u8]) -> anyhow::Result<()>;
-    async fn get_account(&self, pubkey: &str) -> anyhow::Result<Option<Vec<u8>>>;
+pub struct FilecoinStorage {
+    ipfs_client: IpfsClient,
 }
 
-pub mod redis;
-pub mod scylla;
-pub mod clickhouse;
+impl FilecoinStorage {
+    pub fn new() -> Result<Self> {
+        let ipfs_client = IpfsClient::default();
+        Ok(Self { ipfs_client })
+    }
+
+    pub async fn store(&self, data: &[u8]) -> Result<String> {
+        let res = self.ipfs_client.add(data).await?;
+        Ok(res.hash)
+    }
+
+    pub async fn retrieve(&self, cid: &str) -> Result<Vec<u8>> {
+        let cid = Cid::try_from(cid)?;
+        let data = self.ipfs_client.cat(&cid.to_string()).await?;
+        Ok(data)
+    }
+}
