@@ -13,11 +13,11 @@ pub struct CompressedAccount {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CompressedBlock {
-    pub slot: i64,
+    pub slot: u64,
     pub blockhash: String,
     pub previous_blockhash: String,
-    pub parent_slot: i64,
-    pub transactions: i64,
+    pub parent_slot: u64,
+    pub transactions: u64,
     pub data: Vec<u8>,
     pub proof: Vec<u8>,
 }
