@@ -70,6 +70,7 @@ ethers-abi = { version = "18.0.0"}
 criterion = "0.5.1"
 chrono = "0.4.38"
 schemars = "0.8.21"
+borsh = "1.5.1"
 
 [patch.crates-io]
 der = { git = "https://github.com/tavakyan/formats.git", branch = "fix/downgrade-zeroize-version" }

@@ -1,0 +1,18 @@
+syntax = "proto3";
+package windexer;
+
+service Windexer {
+  rpc GetAccount (GetAccountRequest) returns (GetAccountResponse);
+}
+
+message GetAccountRequest {
+  string pubkey = 1;
+}
+
+message GetAccountResponse {
+  uint64 lamports = 1;
+  string owner = 2;
+  bool executable = 3;
+  uint64 rent_epoch = 4;
+  bytes data = 5;
+}
