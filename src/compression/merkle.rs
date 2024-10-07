@@ -1,77 +1,80 @@
-use crate::compression::poseidon::PoseidonHash;
-use ark_ed_on_bls12_381::Fq as F;
+use crate::compression::poseidon::poseidon_hash;
 
 pub struct MerkleTree {
-    layers: Vec<Vec<[u8; 32]>>,
-    hasher: PoseidonHash,
+    pub max_depth: usize,
+    pub leaves: Vec<[u8; 32]>,
+    pub nodes: Vec<Vec<[u8; 32]>>,
 }
 
 impl MerkleTree {
-    pub fn new(leaves: Vec<[u8; 32]>) -> Self {
-        let mut tree = Self {
-            layers: vec![leaves],
-            hasher: PoseidonHash::new(),
-        };
-        tree.build_tree();
-        tree
+    pub fn new(max_depth: usize) -> Self {
+        MerkleTree {
+            max_depth,
+            leaves: Vec::new(),
+            nodes: vec![Vec::new(); max_depth + 1],
+        }
     }
 
-    fn build_tree(&mut self) {
-        while self.layers.last().unwrap().len() > 1 {
-            let current_layer = self.layers.last().unwrap();
-            let mut new_layer = Vec::new();
+    pub fn append(&mut self, leaf: [u8; 32]) {
+        self.leaves.push(leaf);
+        self.update_tree();
+    }
 
-            for chunk in current_layer.chunks(2) {
-                if chunk.len() == 2 {
-                    let left = F::from_le_bytes_mod_order(&chunk[0]);
-                    let right = F::from_le_bytes_mod_order(&chunk[1]);
-                    let parent = self.hasher.hash(&[left, right]);
-                    new_layer.push(parent.into_repr().to_bytes_le());
+    pub fn update(&mut self, index: usize, new_leaf: [u8; 32]) {
+        if index < self.leaves.len() {
+            self.leaves[index] = new_leaf;
+            self.update_tree();
+        }
+    }
+
+    fn update_tree(&mut self) {
+        for i in 0..self.max_depth {
+            let level_size = (self.leaves.len() + (1 << i) - 1) >> i;
+            self.nodes[i] = Vec::with_capacity(level_size);
+            for j in (0..level_size).step_by(2) {
+                let left = if j < level_size {
+                    self.get_node(i, j)
                 } else {
-                    new_layer.push(chunk[0]);
-                }
+                    [0u8; 32]
+                };
+                let right = if j + 1 < level_size {
+                    self.get_node(i, j + 1)
+                } else {
+                    [0u8; 32]
+                };
+                let parent = poseidon_hash(&[&left, &right]);
+                self.nodes[i + 1].push(parent);
             }
+        }
+    }
 
-            self.layers.push(new_layer);
+    fn get_node(&self, level: usize, index: usize) -> [u8; 32] {
+        if level == 0 {
+            self.leaves[index]
+        } else {
+            self.nodes[level - 1][index]
         }
     }
 
     pub fn root(&self) -> [u8; 32] {
-        self.layers.last().unwrap()[0]
+        if self.nodes[self.max_depth].is_empty() {
+            [0u8; 32]
+        } else {
+            self.nodes[self.max_depth][0]
+        }
     }
 
-    pub fn generate_proof(&self, index: usize) -> Vec<[u8; 32]> {
+    pub fn generate_proof(&self, index: usize) -> Vec<([u8; 32], bool)> {
         let mut proof = Vec::new();
         let mut current_index = index;
-
-        for layer in &self.layers[..self.layers.len() - 1] {
-            let sibling_index = if current_index % 2 == 0 { current_index + 1 } else { current_index - 1 };
-            if sibling_index < layer.len() {
-                proof.push(layer[sibling_index]);
+        for i in 0..self.max_depth {
+            let sibling_index = current_index ^ 1;
+            if sibling_index < self.nodes[i].len() {
+                let is_left = current_index & 1 == 0;
+                proof.push((self.get_node(i, sibling_index), is_left));
             }
-            current_index /= 2;
+            current_index >>= 1;
         }
-
         proof
-    }
-
-    pub fn verify_proof(&self, proof: &[[u8; 32]], leaf: [u8; 32], index: usize) -> bool {
-        let mut current = leaf;
-        let mut current_index = index;
-
-        for sibling in proof {
-            let (left, right) = if current_index % 2 == 0 {
-                (current, *sibling)
-            } else {
-                (*sibling, current)
-            };
-
-            let left_f = F::from_le_bytes_mod_order(&left);
-            let right_f = F::from_le_bytes_mod_order(&right);
-            current = self.hasher.hash(&[left_f, right_f]).into_repr().to_bytes_le();
-            current_index /= 2;
-        }
-
-        current == self.root()
     }
 }
