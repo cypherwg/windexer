@@ -67,6 +67,9 @@ toml = "0.8.19"
 wasmer-compiler-cranelift = "4.4.0"
 ethers = { version = "2.0.14" }
 ethers-abi = { version = "18.0.0"}
+criterion = "0.5.1"
+chrono = "0.4.38"
+schemars = "0.8.21"
 
 [patch.crates-io]
 der = { git = "https://github.com/tavakyan/formats.git", branch = "fix/downgrade-zeroize-version" }
@@ -86,3 +89,15 @@ harness = false
 lto = true
 codegen-units = 1
 panic = "abort"
+
+[[bin]]
+name = "benchmark"
+path = "tools/benchmark.rs"
+
+[[bin]]
+name = "data_generator"
+path = "tools/data_generator.rs"
+
+[[bin]]
+name = "schema_generator"
+path = "tools/schema_generator.rs"
