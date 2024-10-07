@@ -18,7 +18,9 @@ pub async fn run() -> Result<()> {
     let rpc_client = rpc::client::RpcClient::new(&config.solana_rpc_url);
     let indexer = indexer::Indexer::new(storage.clone(), rpc_client.clone());
     
-    let api_server = api::start_server(config.api_port, storage.clone())?;
+    let wasm_runtime = wasm::WasmRuntime::new();
+    
+    let api_server = api::start_server(config.api_port, storage.clone(), wasm_runtime.clone())?;
     let metrics_server = metrics::start_server(config.metrics_port)?;
     
     tokio::select! {

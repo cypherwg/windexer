@@ -7,12 +7,13 @@ description = "High-performance Solana indexer with ZK compression and advanced 
 repository = "https://github.com/cypherwg/windexer"
 license = "GNU-GPLv3"
 
-[workspace]
-members = [
-    "src/lib",
-    "src/bin/windexer",
-    "src/bin/cli",
-]
+[[bin]]
+name = "windexer"
+path = "src/main.rs"
+
+[[bin]]
+name = "windexer-cli"
+path = "src/bin/cli.rs"
 
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
@@ -62,6 +63,8 @@ sqlx = { version = "0.8.2", features = ["runtime-tokio-native-tls", "postgres"] 
 ipfs-api-backend-hyper = "0.6.0"
 cid = "0.11.1"
 hex = "0.4.3"
+toml = "0.8.19"
+wasmer-compiler-cranelift = "4.4.0"
 
 [dev-dependencies]
 mockall = "0.13.0"
