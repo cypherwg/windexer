@@ -56,6 +56,11 @@ poseidon = "0.1.0"
 rand = "0.8.5"
 solana-transaction-status = "2.0.13"
 log = "0.4.22"
+prometheus = "0.13.4"
+lazy_static = "1.5.0"
+sqlx = { version = "0.8.2", features = ["runtime-tokio-native-tls", "postgres"] }
+ipfs-api-backend-hyper = "0.6.0"
+cid = "0.11.1"
 
 [dev-dependencies]
 mockall = "0.13.0"
