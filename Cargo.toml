@@ -54,6 +54,8 @@ ark-crypto-primitives = "0.4.0"
 ark-ed-on-bls12-381 = "0.4.0"
 poseidon = "0.1.0"
 rand = "0.8.5"
+solana-transaction-status = "2.0.13"
+log = "0.4.22"
 
 [dev-dependencies]
 mockall = "0.13.0"
