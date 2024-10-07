@@ -65,6 +65,12 @@ cid = "0.11.1"
 hex = "0.4.3"
 toml = "0.8.19"
 wasmer-compiler-cranelift = "4.4.0"
+ethers = { version = "2.0.14" }
+ethers-abi = { version = "18.0.0"}
+
+[patch.crates-io]
+der = { git = "https://github.com/tavakyan/formats.git", branch = "fix/downgrade-zeroize-version" }
+curve25519-dalek = { git = "https://github.com/solana-labs/curve25519-dalek.git", rev = "b500cdc2a920cd5bff9e2dd974d7b97349d61464" }
 
 [dev-dependencies]
 mockall = "0.13.0"
