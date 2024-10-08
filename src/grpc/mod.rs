@@ -1,7 +1,7 @@
-pub mod client;
-pub mod server;
-pub mod service;
+mod client;
+mod methods;
+mod server;
 
 pub use client::GrpcClient;
+pub use methods::*;
 pub use server::GrpcServer;
-pub use service::WindexerService;

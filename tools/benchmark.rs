@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use std::time::Duration;
-use windexer::{indexer::Indexer, rpc::RpcClient, storage::Storage};
+use windexer::{grpc::RpcClient, indexer::Indexer, storage::Storage};
 
 fn benchmark_indexing(c: &mut Criterion) {
     let rpc_client = RpcClient::new("https://api.mainnet-beta.solana.com".to_string());
